@@ -1,0 +1,38 @@
+bin/
+obj/
+.vscode/
+.idea/
+.vs/
+
+# MelonLoader cache
+MelonLoader/Cache/
+
+# Logs and temporary files
+*.log
+*.bak
+*.swp
+*.tmp
+
+# Build output directories
+out/
+build/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Debug files
+*.pdb
+*.mdb
+
+# IDE specific
+.vscode/
+.idea/
+
+# Dependency folders for Unity-based projects (if applicable)
+Library/
+Temp/
+Logs/
+
+# Ignore the compiled DLL (if applicable)
+*.dll
