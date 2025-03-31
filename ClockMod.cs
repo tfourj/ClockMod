@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.1", "TfourJ")]
+[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.2", "TfourJ")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace ClockMod
@@ -16,11 +16,19 @@ namespace ClockMod
         private string filepath = "UserData/ClockMod.cfg";
         private bool guiSubscribed = false;
         private int currentPositionIndex;
-        private const KeyCode ToggleKey = KeyCode.F12;
         private MelonPreferences_Category myCategory;
         private MelonPreferences_Entry<int> clockPosition;
+        private MelonPreferences_Entry<float> clockSizePreference;
+        private MelonPreferences_Entry<bool> clockEnabledPreference;
         private float keyCooldownTime = 0.5f;
         private float lastKeyPressTime = 0f;
+        private float clockSize = 0f; // -10 to +10, 0 is default
+        private bool isClockEnabled = true;
+        
+        public int CurrentPositionIndex => currentPositionIndex;
+        public float ClockSize => clockSize;
+        public bool IsClockEnabled => isClockEnabled;
+
         private readonly Vector2[] positionOptions =
         {
             new Vector2(0f, 0f), // Top-left
@@ -37,6 +45,8 @@ namespace ClockMod
             myCategory.SetFilePath(filepath);
 
             clockPosition = myCategory.CreateEntry<int>("Clock_Position", 1);
+            clockSizePreference = myCategory.CreateEntry<float>("Clock_Size", 0f);
+            clockEnabledPreference = myCategory.CreateEntry<bool>("Clock_Enabled", true);
 
             if (System.IO.File.Exists(filepath))
             {
@@ -48,9 +58,11 @@ namespace ClockMod
                 myCategory.SaveToFile();
             }
 
-            LoadTimePosition();
+            LoadSettings();
+            
+            Menu.Initialize(this);
+            
             myCategory.SaveToFile();
-
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -141,71 +153,97 @@ namespace ClockMod
 
         private void DrawClock()
         {
-            if (timeText != null)
+            HandleKeyInput();
+            if (timeText == null || !isClockEnabled) return;
+
+            GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
+            boxStyle.padding = new RectOffset(8, 8, 4, 4);
+            boxStyle.alignment = TextAnchor.MiddleCenter;
+            
+            Vector2 textSize = boxStyle.CalcSize(new GUIContent(timeText.text));
+            float sizeMultiplier = 1f + (clockSize / 10f); // Convert -10 to +10 range to 0.0 to 2.0 multiplier
+            GUIStyle clockStyle = new GUIStyle(boxStyle);
+            clockStyle.fontSize = Mathf.RoundToInt(18 * sizeMultiplier); // Fixed base size of 18
+            textSize = clockStyle.CalcSize(new GUIContent(timeText.text));
+            textSize.x += 16 * sizeMultiplier;
+            textSize.y += 8 * sizeMultiplier;
+            
+            float padding = 10f;
+            float xPosition = 0f;
+            float yPosition = 0f;
+
+            switch (currentPositionIndex)
             {
-                HandleKeyInput();
-
-                GUIStyle boxStyle = GUI.skin.box;
-                Vector2 textSize = boxStyle.CalcSize(new GUIContent(timeText.text));
-                float padding = 10f;
-                float xPosition = 0f;
-                float yPosition = 0f;
-
-                switch (currentPositionIndex)
-                {
-                    case 0: // Top-left
-                        xPosition = padding;
-                        yPosition = padding;
-                        break;
-                    case 1: // Top-right
-                        xPosition = Screen.width - textSize.x - padding;
-                        yPosition = padding;
-                        break;
-                    case 2: // Bottom-left
-                        xPosition = padding;
-                        yPosition = Screen.height - textSize.y - padding;
-                        break;
-                    case 3: // Bottom-right
-                        xPosition = Screen.width - textSize.x - padding;
-                        yPosition = Screen.height - textSize.y - padding;
-                        break;
-                }
-
-                Rect boxRect = new Rect(xPosition, yPosition, textSize.x, textSize.y);
-                GUI.Box(boxRect, timeText.text, boxStyle);
+                case 0: // Top-left
+                    xPosition = padding;
+                    yPosition = padding;
+                    break;
+                case 1: // Top-right
+                    xPosition = Screen.width - textSize.x - padding;
+                    yPosition = padding;
+                    break;
+                case 2: // Bottom-left
+                    xPosition = padding;
+                    yPosition = Screen.height - textSize.y - padding;
+                    break;
+                case 3: // Bottom-right
+                    xPosition = Screen.width - textSize.x - padding;
+                    yPosition = Screen.height - textSize.y - padding;
+                    break;
             }
+
+            Rect boxRect = new Rect(xPosition, yPosition, textSize.x, textSize.y);
+            GUI.Box(boxRect, timeText.text, clockStyle);
         }
 
         private void HandleKeyInput()
         {
             if (Time.time - lastKeyPressTime >= keyCooldownTime)
             {
-                if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(ToggleKey))
+                if (Menu.HandleKeyInput())
                 {
-                    CycleTimePosition();
                     lastKeyPressTime = Time.time;
+                    return;
                 }
             }
         }
 
-        private void CycleTimePosition()
+        public void SetClockPosition(int positionIndex)
         {
-            currentPositionIndex = (currentPositionIndex + 1) % positionOptions.Length;
-            LoggerInstance.Msg($"Time position changed to: {positionOptions[currentPositionIndex]}");
-            SaveTimePosition();
+            if (positionIndex >= 0 && positionIndex < positionOptions.Length)
+            {
+                currentPositionIndex = positionIndex;
+                LoggerInstance.Msg($"Clock position set to {positionOptions[currentPositionIndex]}");
+            }
+        }
+        
+        public void SetClockSize(float size)
+        {
+            clockSize = Mathf.Clamp(size, -10f, 10f);
+            LoggerInstance.Msg($"Clock size set to {clockSize}");
+        }
+        
+        public void SetClockEnabled(bool enabled)
+        {
+            isClockEnabled = enabled;
+            LoggerInstance.Msg($"Clock display {(enabled ? "enabled" : "disabled")}");
         }
 
-        private void SaveTimePosition()
+        public void SaveSettings()
         {
             clockPosition.Value = currentPositionIndex;
+            clockSizePreference.Value = clockSize;
+            clockEnabledPreference.Value = isClockEnabled;
             myCategory.SaveToFile();
-            LoggerInstance.Msg($"Saved position: {currentPositionIndex}");
+            LoggerInstance.Msg("Settings saved to file");
         }
 
-        private void LoadTimePosition()
+        private void LoadSettings()
         {
             currentPositionIndex = clockPosition.Value;
-            LoggerInstance.Msg($"Loaded position: {currentPositionIndex}");
+            clockSize = clockSizePreference.Value;
+            isClockEnabled = clockEnabledPreference.Value;
+            LoggerInstance.Msg($"Loaded settings - Position: {currentPositionIndex}, Size: {clockSize}, Enabled: {isClockEnabled}");
         }
     }
 }
