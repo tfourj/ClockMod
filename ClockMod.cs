@@ -49,6 +49,8 @@ namespace ClockMod
             }
 
             LoadTimePosition();
+            myCategory.SaveToFile();
+
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
