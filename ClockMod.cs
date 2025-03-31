@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.0", "TfourJ")]
+[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.1", "TfourJ")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace ClockMod
@@ -11,7 +11,7 @@ namespace ClockMod
     public class ClockMod : MelonMod
     {
         private Text timeText;
-        private const int MaxAttempts = 5;
+        private const int MaxAttempts = 10;
         private const float AttemptInterval = 1f;
         private string filepath = "UserData/ClockMod.cfg";
         private bool guiSubscribed = false;
@@ -88,24 +88,51 @@ namespace ClockMod
             while (attempts < MaxAttempts && timeText == null)
             {
                 attempts++;
-                GameObject timeObject = GameObject.Find("Player (0)/Player_Local/CameraContainer/Camera/OverlayCamera/GameplayMenu/Phone/phone/HomeScreen/InfoBar/Time");
-                if (timeObject != null)
+
+                // Find the Player_Local GameObject directly
+                GameObject playerLocalObject = GameObject.Find("Player_Local");
+                if (playerLocalObject == null)
                 {
-                    timeText = timeObject.GetComponent<Text>();
-                    if (timeText != null)
+                    LoggerInstance.Warning($"Attempt {attempts}: Player_Local object not found. Retrying in {AttemptInterval} seconds...");
+                    yield return new WaitForSeconds(AttemptInterval);
+                    continue;
+                }
+
+                Transform parentTransform = playerLocalObject.transform.parent;
+                if (parentTransform == null)
+                {
+                    LoggerInstance.Warning($"Attempt {attempts}: Parent of Player_Local not found. Retrying in {AttemptInterval} seconds...");
+                    yield return new WaitForSeconds(AttemptInterval);
+                    continue;
+                }
+
+                LoggerInstance.Msg($"Parent of Player_Local found: {parentTransform.name}");
+
+                // Traverse the hierarchy from Player_Local to find the Time GameObject
+                Transform infoBarTransform = playerLocalObject.transform.Find("CameraContainer/Camera/OverlayCamera/GameplayMenu/Phone/phone/HomeScreen/InfoBar");
+                if (infoBarTransform != null)
+                {
+                    GameObject timeObject = infoBarTransform.Find("Time")?.gameObject;
+                    if (timeObject != null)
                     {
-                        LoggerInstance.Msg("Clock component found.");
-                        if (!guiSubscribed)
+                        timeText = timeObject.GetComponent<Text>();
+                        if (timeText != null)
                         {
-                            MelonEvents.OnGUI.Subscribe(DrawClock, 100);
-                            guiSubscribed = true;
+                            LoggerInstance.Msg("Clock component found.");
+                            if (!guiSubscribed)
+                            {
+                                MelonEvents.OnGUI.Subscribe(DrawClock, 100);
+                                guiSubscribed = true;
+                            }
+                            yield break;
                         }
-                        yield break;
                     }
                 }
+
                 LoggerInstance.Warning($"Attempt {attempts}: Clock not found. Retrying in {AttemptInterval} seconds...");
                 yield return new WaitForSeconds(AttemptInterval);
             }
+
             if (timeText == null)
             {
                 LoggerInstance.Error("Max attempts reached. Failed to find the Clock component.");
