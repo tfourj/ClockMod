@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.2", "TfourJ")]
+[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.3", "TfourJ")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace ClockMod
@@ -20,21 +20,29 @@ namespace ClockMod
         private MelonPreferences_Entry<int> clockPosition;
         private MelonPreferences_Entry<float> clockSizePreference;
         private MelonPreferences_Entry<bool> clockEnabledPreference;
+        private MelonPreferences_Entry<int> clockStylePreference;
+        private MelonPreferences_Entry<float> customXPosition;
+        private MelonPreferences_Entry<float> customYPosition;
         private float keyCooldownTime = 0.5f;
         private float lastKeyPressTime = 0f;
         private float clockSize = 0f; // -10 to +10, 0 is default
         private bool isClockEnabled = true;
+        private int clockStyle = 0; // 0 = Classic, 1 = Modern
         
         public int CurrentPositionIndex => currentPositionIndex;
         public float ClockSize => clockSize;
         public bool IsClockEnabled => isClockEnabled;
+        public int ClockStyle => clockStyle;
+        public float CustomXPosition => customXPosition.Value;
+        public float CustomYPosition => customYPosition.Value;
 
         private readonly Vector2[] positionOptions =
         {
             new Vector2(0f, 0f), // Top-left
             new Vector2(1f, 0f), // Top-right
             new Vector2(0f, 1f), // Bottom-left
-            new Vector2(1f, 1f)  // Bottom-right
+            new Vector2(1f, 1f), // Bottom-right
+            new Vector2(0.5f, 0.5f) // Custom position
         };
 
         public override void OnInitializeMelon()
@@ -47,6 +55,9 @@ namespace ClockMod
             clockPosition = myCategory.CreateEntry<int>("Clock_Position", 1);
             clockSizePreference = myCategory.CreateEntry<float>("Clock_Size", 0f);
             clockEnabledPreference = myCategory.CreateEntry<bool>("Clock_Enabled", true);
+            clockStylePreference = myCategory.CreateEntry<int>("Clock_Style", 0);
+            customXPosition = myCategory.CreateEntry<float>("Custom_X_Position", 0.5f);
+            customYPosition = myCategory.CreateEntry<float>("Custom_Y_Position", 0.5f);
 
             if (System.IO.File.Exists(filepath))
             {
@@ -160,11 +171,22 @@ namespace ClockMod
             boxStyle.padding = new RectOffset(8, 8, 4, 4);
             boxStyle.alignment = TextAnchor.MiddleCenter;
             
-            Vector2 textSize = boxStyle.CalcSize(new GUIContent(timeText.text));
             float sizeMultiplier = 1f + (clockSize / 10f); // Convert -10 to +10 range to 0.0 to 2.0 multiplier
-            GUIStyle clockStyle = new GUIStyle(boxStyle);
-            clockStyle.fontSize = Mathf.RoundToInt(18 * sizeMultiplier); // Fixed base size of 18
-            textSize = clockStyle.CalcSize(new GUIContent(timeText.text));
+            string displayText = timeText.text;
+            if (clockStyle == 1) // Modern style
+            {
+                string[] parts = displayText.Split(' ');
+                if (parts.Length >= 3)
+                {
+                    int dayFontSize = Mathf.RoundToInt(14f * sizeMultiplier);
+                    displayText = $"{parts[0]} {parts[1]}\n<size={dayFontSize}>{parts[2]}</size>";
+                }
+            }
+            
+            Vector2 textSize = boxStyle.CalcSize(new GUIContent(displayText));
+            GUIStyle displayStyle = new GUIStyle(boxStyle);
+            displayStyle.fontSize = Mathf.RoundToInt(18 * sizeMultiplier); // Fixed base size of 18
+            textSize = displayStyle.CalcSize(new GUIContent(displayText));
             textSize.x += 16 * sizeMultiplier;
             textSize.y += 8 * sizeMultiplier;
             
@@ -172,28 +194,36 @@ namespace ClockMod
             float xPosition = 0f;
             float yPosition = 0f;
 
-            switch (currentPositionIndex)
+            if (currentPositionIndex == 4) // Custom position
             {
-                case 0: // Top-left
-                    xPosition = padding;
-                    yPosition = padding;
-                    break;
-                case 1: // Top-right
-                    xPosition = Screen.width - textSize.x - padding;
-                    yPosition = padding;
-                    break;
-                case 2: // Bottom-left
-                    xPosition = padding;
-                    yPosition = Screen.height - textSize.y - padding;
-                    break;
-                case 3: // Bottom-right
-                    xPosition = Screen.width - textSize.x - padding;
-                    yPosition = Screen.height - textSize.y - padding;
-                    break;
+                xPosition = Screen.width * customXPosition.Value - textSize.x / 2;
+                yPosition = Screen.height * customYPosition.Value - textSize.y / 2;
+            }
+            else
+            {
+                switch (currentPositionIndex)
+                {
+                    case 0: // Top-left
+                        xPosition = padding;
+                        yPosition = padding;
+                        break;
+                    case 1: // Top-right
+                        xPosition = Screen.width - textSize.x - padding;
+                        yPosition = padding;
+                        break;
+                    case 2: // Bottom-left
+                        xPosition = padding;
+                        yPosition = Screen.height - textSize.y - padding;
+                        break;
+                    case 3: // Bottom-right
+                        xPosition = Screen.width - textSize.x - padding;
+                        yPosition = Screen.height - textSize.y - padding;
+                        break;
+                }
             }
 
             Rect boxRect = new Rect(xPosition, yPosition, textSize.x, textSize.y);
-            GUI.Box(boxRect, timeText.text, clockStyle);
+            GUI.Box(boxRect, displayText, displayStyle);
         }
 
         private void HandleKeyInput()
@@ -229,11 +259,25 @@ namespace ClockMod
             LoggerInstance.Msg($"Clock display {(enabled ? "enabled" : "disabled")}");
         }
 
+        public void SetClockStyle(int style)
+        {
+            clockStyle = style;
+            LoggerInstance.Msg($"Clock style set to {(style == 0 ? "Classic" : "Modern")}");
+        }
+
+        public void SetCustomPosition(float x, float y)
+        {
+            customXPosition.Value = Mathf.Clamp01(x);
+            customYPosition.Value = Mathf.Clamp01(y);
+            LoggerInstance.Msg($"Custom position set to ({customXPosition.Value}, {customYPosition.Value})");
+        }
+
         public void SaveSettings()
         {
             clockPosition.Value = currentPositionIndex;
             clockSizePreference.Value = clockSize;
             clockEnabledPreference.Value = isClockEnabled;
+            clockStylePreference.Value = clockStyle;
             myCategory.SaveToFile();
             LoggerInstance.Msg("Settings saved to file");
         }
@@ -243,7 +287,8 @@ namespace ClockMod
             currentPositionIndex = clockPosition.Value;
             clockSize = clockSizePreference.Value;
             isClockEnabled = clockEnabledPreference.Value;
-            LoggerInstance.Msg($"Loaded settings - Position: {currentPositionIndex}, Size: {clockSize}, Enabled: {isClockEnabled}");
+            clockStyle = clockStylePreference.Value;
+            LoggerInstance.Msg($"Loaded settings - Position: {currentPositionIndex}, Size: {clockSize}, Enabled: {isClockEnabled}, Style: {clockStyle}");
         }
     }
 }
