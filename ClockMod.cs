@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.3", "TfourJ")]
+[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.4", "TfourJ")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace ClockMod

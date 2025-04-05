@@ -173,6 +173,15 @@ namespace ClockMod
             {
                 selectedPosition = newPosition;
                 settingsChanged = true;
+                
+                if (selectedPosition == 4)
+                {
+                    windowRect.height = 500;
+                }
+                else
+                {
+                    windowRect.height = 400;
+                }
             }
             
             // Custom position sliders
