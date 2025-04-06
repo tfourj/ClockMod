@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod", "1.1.4", "TfourJ")]
+[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod_Mono", "1.1.4", "TfourJ")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace ClockMod
@@ -28,7 +28,7 @@ namespace ClockMod
         private float clockSize = 0f; // -10 to +10, 0 is default
         private bool isClockEnabled = true;
         private int clockStyle = 0; // 0 = Classic, 1 = Modern
-        
+
         public int CurrentPositionIndex => currentPositionIndex;
         public float ClockSize => clockSize;
         public bool IsClockEnabled => isClockEnabled;
@@ -70,9 +70,9 @@ namespace ClockMod
             }
 
             LoadSettings();
-            
+
             Menu.Initialize(this);
-            
+
             myCategory.SaveToFile();
         }
 
@@ -170,7 +170,7 @@ namespace ClockMod
             GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
             boxStyle.padding = new RectOffset(8, 8, 4, 4);
             boxStyle.alignment = TextAnchor.MiddleCenter;
-            
+
             float sizeMultiplier = 1f + (clockSize / 10f); // Convert -10 to +10 range to 0.0 to 2.0 multiplier
             string displayText = timeText.text;
             if (clockStyle == 1) // Modern style
@@ -182,14 +182,14 @@ namespace ClockMod
                     displayText = $"{parts[0]} {parts[1]}\n<size={dayFontSize}>{parts[2]}</size>";
                 }
             }
-            
+
             Vector2 textSize = boxStyle.CalcSize(new GUIContent(displayText));
             GUIStyle displayStyle = new GUIStyle(boxStyle);
             displayStyle.fontSize = Mathf.RoundToInt(18 * sizeMultiplier); // Fixed base size of 18
             textSize = displayStyle.CalcSize(new GUIContent(displayText));
             textSize.x += 16 * sizeMultiplier;
             textSize.y += 8 * sizeMultiplier;
-            
+
             float padding = 10f;
             float xPosition = 0f;
             float yPosition = 0f;
@@ -246,13 +246,13 @@ namespace ClockMod
                 LoggerInstance.Msg($"Clock position set to {positionOptions[currentPositionIndex]}");
             }
         }
-        
+
         public void SetClockSize(float size)
         {
             clockSize = Mathf.Clamp(size, -10f, 10f);
             LoggerInstance.Msg($"Clock size set to {clockSize}");
         }
-        
+
         public void SetClockEnabled(bool enabled)
         {
             isClockEnabled = enabled;
