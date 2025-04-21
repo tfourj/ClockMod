@@ -2,11 +2,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-using static System.Net.Mime.MediaTypeNames;
-using System.Numerics;
-using System;
 
-[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod_Mono", "1.1.5", "TfourJ")]
+
+[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod_Il2Cpp", "1.1.5", "TfourJ")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace ClockMod

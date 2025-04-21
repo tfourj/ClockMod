@@ -1,9 +1,5 @@
 using MelonLoader;
 using UnityEngine;
-using UnityEngine.UI;
-using System;
-using System.Drawing;
-using System.Numerics;
 
 namespace ClockMod
 {
