@@ -2,8 +2,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using static System.Net.Mime.MediaTypeNames;
+using System.Numerics;
+using System;
 
-[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod_Mono", "1.1.4", "TfourJ")]
+[assembly: MelonInfo(typeof(ClockMod.ClockMod), "ClockMod_Mono", "1.1.5", "TfourJ")]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 namespace ClockMod
@@ -23,6 +26,10 @@ namespace ClockMod
         private MelonPreferences_Entry<int> clockStylePreference;
         private MelonPreferences_Entry<float> customXPosition;
         private MelonPreferences_Entry<float> customYPosition;
+        private MelonPreferences_Entry<string> hotkeyModifierEntry;
+        private MelonPreferences_Entry<string> hotkeyKeyEntry;
+        private string hotkeyModifier = "Left Shift";
+        private string hotkeyKey = "F12";
         private float keyCooldownTime = 0.5f;
         private float lastKeyPressTime = 0f;
         private float clockSize = 0f; // -10 to +10, 0 is default
@@ -35,6 +42,8 @@ namespace ClockMod
         public int ClockStyle => clockStyle;
         public float CustomXPosition => customXPosition.Value;
         public float CustomYPosition => customYPosition.Value;
+        public string HotkeyModifier => hotkeyModifier;
+        public string HotkeyKey => hotkeyKey;
 
         private readonly Vector2[] positionOptions =
         {
@@ -58,6 +67,8 @@ namespace ClockMod
             clockStylePreference = myCategory.CreateEntry<int>("Clock_Style", 0);
             customXPosition = myCategory.CreateEntry<float>("Custom_X_Position", 0.5f);
             customYPosition = myCategory.CreateEntry<float>("Custom_Y_Position", 0.5f);
+            hotkeyModifierEntry = myCategory.CreateEntry<string>("HotkeyModifier", "Left Shift");
+            hotkeyKeyEntry = myCategory.CreateEntry<string>("HotkeyKey", "F12");
 
             if (System.IO.File.Exists(filepath))
             {
@@ -288,7 +299,9 @@ namespace ClockMod
             clockSize = clockSizePreference.Value;
             isClockEnabled = clockEnabledPreference.Value;
             clockStyle = clockStylePreference.Value;
-            LoggerInstance.Msg($"Loaded settings - Position: {currentPositionIndex}, Size: {clockSize}, Enabled: {isClockEnabled}, Style: {clockStyle}");
+            hotkeyModifier = hotkeyModifierEntry.Value;
+            hotkeyKey = hotkeyKeyEntry.Value;
+            LoggerInstance.Msg($"Loaded settings - Position: {currentPositionIndex}, Size: {clockSize}, Enabled: {isClockEnabled}, Style: {clockStyle}, Modifier: {hotkeyModifier}, Key: {hotkeyKey}");
         }
     }
 }

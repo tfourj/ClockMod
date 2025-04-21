@@ -41,10 +41,28 @@ namespace ClockMod
         
         public static bool HandleKeyInput()
         {
-            if (Input.GetKeyDown(KeyCode.F12) && Input.GetKey(KeyCode.LeftShift))
+            // Use configured hotkeys from ClockMod
+            if (clockMod != null)
             {
-                isMenuOpen = !isMenuOpen;
-                return true;
+                KeyCode modifierKey;
+                KeyCode mainKey;
+                try
+                {
+                    modifierKey = (KeyCode)Enum.Parse(typeof(KeyCode), clockMod.HotkeyModifier.Replace(" ", ""));
+                    mainKey = (KeyCode)Enum.Parse(typeof(KeyCode), clockMod.HotkeyKey.Replace(" ", ""));
+                }
+                catch
+                {
+                    MelonLogger.Msg($"Hotkey parsing failed, using default hotkey LeftShift + F12.");
+                    modifierKey = KeyCode.LeftShift;
+                    mainKey = KeyCode.F12;
+                }
+
+                if (Input.GetKeyDown(mainKey) && Input.GetKey(modifierKey))
+                {
+                    isMenuOpen = !isMenuOpen;
+                    return true;
+                }
             }
             
             if (isMenuOpen && Input.GetKeyDown(KeyCode.Escape))
