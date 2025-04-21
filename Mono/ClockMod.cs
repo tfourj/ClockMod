@@ -13,7 +13,7 @@ namespace ClockMod
 {
     public class ClockMod : MelonMod
     {
-        private Text timeText;
+        private UnityEngine.UI.Text timeText;
         private const int MaxAttempts = 10;
         private const float AttemptInterval = 1f;
         private string filepath = "UserData/ClockMod.cfg";
@@ -45,13 +45,13 @@ namespace ClockMod
         public string HotkeyModifier => hotkeyModifier;
         public string HotkeyKey => hotkeyKey;
 
-        private readonly Vector2[] positionOptions =
+        private readonly UnityEngine.Vector2[] positionOptions =
         {
-            new Vector2(0f, 0f), // Top-left
-            new Vector2(1f, 0f), // Top-right
-            new Vector2(0f, 1f), // Bottom-left
-            new Vector2(1f, 1f), // Bottom-right
-            new Vector2(0.5f, 0.5f) // Custom position
+            new UnityEngine.Vector2(0f, 0f), // Top-left
+            new UnityEngine.Vector2(1f, 0f), // Top-right
+            new UnityEngine.Vector2(0f, 1f), // Bottom-left
+            new UnityEngine.Vector2(1f, 1f), // Bottom-right
+            new UnityEngine.Vector2(0.5f, 0.5f) // Custom position
         };
 
         public override void OnInitializeMelon()
@@ -149,7 +149,7 @@ namespace ClockMod
                     GameObject timeObject = infoBarTransform.Find("Time")?.gameObject;
                     if (timeObject != null)
                     {
-                        timeText = timeObject.GetComponent<Text>();
+                        timeText = timeObject.GetComponent<UnityEngine.UI.Text>();
                         if (timeText != null)
                         {
                             LoggerInstance.Msg("Clock component found.");
@@ -194,7 +194,7 @@ namespace ClockMod
                 }
             }
 
-            Vector2 textSize = boxStyle.CalcSize(new GUIContent(displayText));
+            UnityEngine.Vector2 textSize = boxStyle.CalcSize(new GUIContent(displayText));
             GUIStyle displayStyle = new GUIStyle(boxStyle);
             displayStyle.fontSize = Mathf.RoundToInt(18 * sizeMultiplier); // Fixed base size of 18
             textSize = displayStyle.CalcSize(new GUIContent(displayText));

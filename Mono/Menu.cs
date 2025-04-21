@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System;
 using System.Drawing;
 using System.Numerics;
+using Color = UnityEngine.Color;
 
 namespace ClockMod
 {
@@ -17,7 +18,7 @@ namespace ClockMod
         private static bool isMenuOpen = false;
         private static Rect windowRect = new Rect(100, 100, 320, 400); // Increased height for new options
         private static bool isResizing = false;
-        private static Vector2 resizeStartPos;
+        private static UnityEngine.Vector2 resizeStartPos;
         private static Rect originalRect;
         private static readonly string[] positionNames = new string[] { "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right", "Custom" };
         private static int selectedStyle = 0;
